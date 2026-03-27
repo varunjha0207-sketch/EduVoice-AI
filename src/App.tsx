@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Mic, 
@@ -228,6 +228,7 @@ const VoiceRoom = ({ config, onBack }: { config: SessionConfig, onBack: () => vo
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [feedback, setFeedback] = useState<{ feedback: string, notes: string[] } | null>(null);
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
+  const hasGreeted = useRef(false);
 
   const { isListening, partialTranscript, error, isSupported, startListening, stopListening, speak } = useSpeech({
     language: config.language === 'Hindi' ? 'hi-IN' : 'en-US',
@@ -241,6 +242,9 @@ const VoiceRoom = ({ config, onBack }: { config: SessionConfig, onBack: () => vo
 
   // Initial greeting
   useEffect(() => {
+    if (hasGreeted.current) return;
+    hasGreeted.current = true;
+
     const startGreeting = async () => {
       setIsThinking(true);
       const greetingPrompt = `Start a ${config.type} session about ${config.topic}. 

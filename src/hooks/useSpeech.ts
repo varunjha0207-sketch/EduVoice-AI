@@ -18,6 +18,15 @@ export function useSpeech({ onTranscript, onPartialTranscript, language = 'en-US
   const recognitionRef = useRef<any>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const currentTranscriptRef = useRef<string>('');
+  
+  // Use refs for callbacks to prevent effect re-runs
+  const onTranscriptRef = useRef(onTranscript);
+  const onPartialTranscriptRef = useRef(onPartialTranscript);
+
+  useEffect(() => {
+    onTranscriptRef.current = onTranscript;
+    onPartialTranscriptRef.current = onPartialTranscript;
+  }, [onTranscript, onPartialTranscript]);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -46,14 +55,14 @@ export function useSpeech({ onTranscript, onPartialTranscript, language = 'en-US
 
       setPartialTranscript(fullText);
       currentTranscriptRef.current = fullText;
-      onPartialTranscript?.(fullText);
+      onPartialTranscriptRef.current?.(fullText);
 
       // Reset silence timer whenever we get any result
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       
       silenceTimerRef.current = setTimeout(() => {
         if (currentTranscriptRef.current.trim() && isListening) {
-          onTranscript?.(currentTranscriptRef.current.trim());
+          onTranscriptRef.current?.(currentTranscriptRef.current.trim());
           // Stop recognition after successful transcript to prevent duplicates
           recognition.stop();
         }
@@ -77,7 +86,7 @@ export function useSpeech({ onTranscript, onPartialTranscript, language = 'en-US
       
       // If we have a transcript when it ends, send it if not already sent
       if (currentTranscriptRef.current.trim()) {
-        onTranscript?.(currentTranscriptRef.current.trim());
+        onTranscriptRef.current?.(currentTranscriptRef.current.trim());
         currentTranscriptRef.current = '';
         setPartialTranscript('');
       }
@@ -91,7 +100,7 @@ export function useSpeech({ onTranscript, onPartialTranscript, language = 'en-US
       }
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     };
-  }, [language, onTranscript, onPartialTranscript, silenceTimeout, isListening]);
+  }, [language, silenceTimeout, isListening]);
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current) return;
