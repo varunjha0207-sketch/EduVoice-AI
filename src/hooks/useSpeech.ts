@@ -62,7 +62,10 @@ export function useSpeech({ onTranscript, onPartialTranscript, language = 'en-US
       
       silenceTimerRef.current = setTimeout(() => {
         if (currentTranscriptRef.current.trim() && isListening) {
-          onTranscriptRef.current?.(currentTranscriptRef.current.trim());
+          const text = currentTranscriptRef.current.trim();
+          currentTranscriptRef.current = ''; // Clear BEFORE sending
+          setPartialTranscript('');
+          onTranscriptRef.current?.(text);
           // Stop recognition after successful transcript to prevent duplicates
           recognition.stop();
         }
@@ -86,9 +89,10 @@ export function useSpeech({ onTranscript, onPartialTranscript, language = 'en-US
       
       // If we have a transcript when it ends, send it if not already sent
       if (currentTranscriptRef.current.trim()) {
-        onTranscriptRef.current?.(currentTranscriptRef.current.trim());
-        currentTranscriptRef.current = '';
+        const text = currentTranscriptRef.current.trim();
+        currentTranscriptRef.current = ''; // Clear BEFORE sending
         setPartialTranscript('');
+        onTranscriptRef.current?.(text);
       }
     };
 

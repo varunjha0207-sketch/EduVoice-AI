@@ -229,6 +229,7 @@ const VoiceRoom = ({ config, onBack }: { config: SessionConfig, onBack: () => vo
   const [feedback, setFeedback] = useState<{ feedback: string, notes: string[] } | null>(null);
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
   const hasGreeted = useRef(false);
+  const sessionId = useRef(Date.now().toString());
 
   const { isListening, partialTranscript, error, isSupported, startListening, stopListening, speak } = useSpeech({
     language: config.language === 'Hindi' ? 'hi-IN' : 'en-US',
@@ -239,6 +240,13 @@ const VoiceRoom = ({ config, onBack }: { config: SessionConfig, onBack: () => vo
   });
 
   const [manualText, setManualText] = useState('');
+
+  // Auto-save session state to history when messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      saveSession(messages);
+    }
+  }, [messages]);
 
   // Initial greeting
   useEffect(() => {
@@ -285,12 +293,7 @@ const VoiceRoom = ({ config, onBack }: { config: SessionConfig, onBack: () => vo
     setManualText('');
     
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text, timestamp: Date.now() };
-    setMessages(prev => {
-      const newMessages = [...prev, userMsg];
-      // Auto-save session state to history (without feedback yet)
-      saveSession(newMessages);
-      return newMessages;
-    });
+    setMessages(prev => [...prev, userMsg]);
     setIsThinking(true);
 
     const systemPrompt = `You are a friendly AI tutor for a ${config.type} session. 
@@ -329,10 +332,10 @@ const VoiceRoom = ({ config, onBack }: { config: SessionConfig, onBack: () => vo
 
   const saveSession = (msgs: Message[], fb?: string, nt?: string[]) => {
     const sessions = JSON.parse(localStorage.getItem('eduvoice_sessions') || '[]');
-    const existingIndex = sessions.findIndex((s: Session) => s.config.topic === config.topic && Date.now() - s.timestamp < 3600000); // Same session if within 1 hour
+    const existingIndex = sessions.findIndex((s: Session) => s.id === sessionId.current);
     
     const sessionData: Session = {
-      id: existingIndex >= 0 ? sessions[existingIndex].id : Date.now().toString(),
+      id: sessionId.current,
       config,
       messages: msgs,
       feedback: fb || (existingIndex >= 0 ? sessions[existingIndex].feedback : undefined),
