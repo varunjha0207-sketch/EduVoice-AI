@@ -7,9 +7,13 @@ let aiInstance: GoogleGenAI | null = null;
 function getAI() {
   if (aiInstance) return aiInstance;
   
-  const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+  // Try multiple ways to get the API key
+  const apiKey = 
+    process.env.GEMINI_API_KEY || 
+    (import.meta as any).env?.VITE_GEMINI_API_KEY ||
+    (window as any).VITE_GEMINI_API_KEY;
   
-  if (!apiKey) {
+  if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
     console.warn("GEMINI_API_KEY is missing. AI features will not work.");
     return null;
   }
