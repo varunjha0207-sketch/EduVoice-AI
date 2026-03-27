@@ -233,7 +233,7 @@ const VoiceRoom = ({ config, onBack }: { config: SessionConfig, onBack: () => vo
 
   const { isListening, partialTranscript, error, isSupported, startListening, stopListening, speak } = useSpeech({
     language: config.language === 'Hindi' ? 'hi-IN' : 'en-US',
-    silenceTimeout: 3000, // 3 second delay for silence
+    silenceTimeout: 1500, // 1.5 second delay for silence
     onTranscript: (text) => {
       handleUserMessage(text);
     }
