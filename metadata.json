@@ -1,0 +1,5 @@
+{
+  "name": "EduVoice AI",
+  "description": "Practice interviews, Q&A, and learning with an AI voice tutor",
+  "requestFramePermissions": ["microphone"]
+}
